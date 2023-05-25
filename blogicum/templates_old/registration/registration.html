@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+
+{% block title %}Регистрация пользователя{% endblock title %}
+{% block content %}
+  <h1>Реистрация пользователя</h1>
+    {% include 'registration/includes/form.html' with btn_text='Регистрация' %}
+{% endblock content %}

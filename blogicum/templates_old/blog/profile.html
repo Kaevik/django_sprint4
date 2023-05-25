@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}
+Профиль пользователя {{ profile.username }}
+{% endblock %}
+{% block content %}
+<h1>Профиль пользователя  {{ profile.username }}</h1>
+<p> Имя: {{ profile.first_name }}</p>
+<p> Фамилия: {{ profile.last_name }}</p>
+{% if user.username == profile.username %}
+  <a href="{% url 'users:password_change' %}">Сменить пароль</a> |
+  <a href="{% url 'users:update_user_profile'%}">Редактировать профиль</a>
+{% endif %}
+  {% for post in post_list %}
+   <article class="mb-5">  
+      {% include "includes/post_card.html" %}
+    </article> 
+  {% endfor %}
+
+
+{% endblock %}
