@@ -1,9 +1,6 @@
-from typing import Any
-from django import http
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpRequest, HttpResponse
-from django.http.response import HttpResponse
+from django.http import HttpResponse
 from django.urls import reverse, reverse_lazy
 from django.shortcuts import get_object_or_404, redirect
 from django.views.generic import (ListView, DetailView, CreateView, UpdateView,

@@ -18,7 +18,6 @@ urlpatterns: List[URLPattern] = [
     # Но pytest требовал добавленного в явном виде инклуда в этот urls.
     path('auth/', include('django.contrib.auth.urls')),
     path('admin/', admin.site.urls),
-    
 ]
 
 if settings.DEBUG:

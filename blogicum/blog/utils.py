@@ -25,6 +25,7 @@ class PostsEditMixin:
     template_name = 'blog/create.html'
     queryset = Post.objects.select_related('author', 'location', 'category')
 
+
 class CommentEditMixin:
     model = Comment
     pk_url_kwarg = 'comment_pk'
