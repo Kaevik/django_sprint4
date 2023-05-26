@@ -7,7 +7,7 @@ from django.views.generic import (ListView, DetailView, CreateView, UpdateView,
 from django.core.exceptions import PermissionDenied
 
 from .forms import CreatePostForm, CreateCommentForm
-from .models import Post, Comment
+from .models import Post, Comment, Category
 from .utils import PostsQuerySetMixin, PostsEditMixin
 
 User = get_user_model()
@@ -148,19 +148,18 @@ class BlogCategoryListView(PostsQuerySetMixin, ListView):
     model = Post
     template_name = 'blog/category.html'
     context_object_name = 'post_list'
-    allow_empty = False
+    allow_empty = True
     paginate_by = PAGINATED_BY
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['category'] = context['post_list'][0].category
+        context['category'] = get_object_or_404(Category,slug=self.kwargs['category_slug'], is_published=True)
         return context
 
     def get_queryset(self):
-        return get_list_or_404(
-            super().get_queryset(),
-            category__slug=self.kwargs['category_slug']
-        )
+        return super().get_queryset().filter(
+            category__slug=self.kwargs['category_slug'])
+        
 
 
 class PostDetailView(PostsQuerySetMixin, DetailView):

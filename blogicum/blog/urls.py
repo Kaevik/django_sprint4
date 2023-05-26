@@ -1,10 +1,12 @@
+from typing import List
+
 from django.urls import path, URLPattern
 
 from . import views
 
 app_name: str = 'blog'
 
-urlpatterns: list[URLPattern] = [
+urlpatterns: List[URLPattern] = [
      path('',
           views.BlogIndexListView.as_view(),
           name='index'),
