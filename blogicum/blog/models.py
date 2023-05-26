@@ -87,7 +87,9 @@ class Post(BaseModel):
         Category,
         verbose_name='Категория',
         on_delete=models.SET_NULL,
-        null=True
+        # TODO: это удобно, это хорошо.
+        related_name='posts',
+        null=True,
     )
     image = models.ImageField('Изображение', blank=True, upload_to='img/')
 

@@ -148,19 +148,24 @@ class BlogCategoryListView(PostsQuerySetMixin, ListView):
     model = Post
     template_name = 'blog/category.html'
     context_object_name = 'post_list'
-    allow_empty = False
+    # FIX: может быть пустым.
+    # allow_empty = False
     paginate_by = PAGINATED_BY
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['category'] = context['post_list'][0].category
-        return context
+    # FIX: здесь ошибка. Контекст нужно иначен сформировать.
+    # def get_context_data(self, **kwargs):
+    #     context = super().get_context_data(**kwargs)
+    #     context['category'] = context['post_list'][0].category
+    #     return context
 
     def get_queryset(self):
-        return get_list_or_404(
-            super().get_queryset(),
-            category__slug=self.kwargs['category_slug']
-        )
+        category_slug = self.kwargs['category_slug']
+        # TODO: Получения объекта или 404
+        category = get_object_or_404(Category.objects.filter(
+            is_published=True), slug=category_slug)
+
+        # TODO: Использование related_name
+        return category.posts.filter(is_published=True)
 
 
 class PostDetailView(PostsQuerySetMixin, DetailView):

@@ -1,10 +1,14 @@
-from django.urls import path, URLPattern
+from typing import List
+
+from django.urls import path, URLPattern, reverse
 
 from . import views
 
 app_name: str = 'blog'
 
-urlpatterns: list[URLPattern] = [
+
+# TODO: это правильно.
+urlpatterns: List[URLPattern] = [
      path('',
           views.BlogIndexListView.as_view(),
           name='index'),
