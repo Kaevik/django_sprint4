@@ -13,7 +13,8 @@ handler500 = 'pages.views.server_error'
 urlpatterns: List[URLPattern] = [
     path('pages/', include('pages.urls', namespace='pages')),
     path('', include('blog.urls', namespace='blog')),
-    path('', include('users.urls', namespace='users')),
+    # TODO: лучше auth сюда вынести, чтобы там не повторять.
+    path('auth/', include('users.urls', namespace='users')),
     path('admin/', admin.site.urls),
     
 ]

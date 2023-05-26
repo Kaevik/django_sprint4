@@ -153,13 +153,16 @@ class BlogCategoryListView(PostsQuerySetMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['category'] = get_object_or_404(Category,slug=self.kwargs['category_slug'], is_published=True)
+        context['category'] = get_object_or_404(
+            Category,
+            slug=self.kwargs['category_slug'],
+            is_published=True
+        )
         return context
 
     def get_queryset(self):
         return super().get_queryset().filter(
             category__slug=self.kwargs['category_slug'])
-        
 
 
 class PostDetailView(PostsQuerySetMixin, DetailView):
