@@ -2,7 +2,7 @@ import datetime as dt
 
 from django.utils import timezone
 
-from .models import Post
+from .models import Post, Comment
 
 
 class PostsQuerySetMixin:
@@ -24,3 +24,8 @@ class PostsEditMixin:
     model = Post
     template_name = 'blog/create.html'
     queryset = Post.objects.select_related('author', 'location', 'category')
+
+class CommentEditMixin:
+    model = Comment
+    pk_url_kwarg = 'comment_pk'
+    template_name = 'blog/comment.html'

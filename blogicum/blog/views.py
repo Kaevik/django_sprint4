@@ -1,14 +1,18 @@
+from typing import Any
+from django import http
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpRequest, HttpResponse
+from django.http.response import HttpResponse
 from django.urls import reverse, reverse_lazy
-from django.shortcuts import get_list_or_404, get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.views.generic import (ListView, DetailView, CreateView, UpdateView,
                                   DeleteView)
 from django.core.exceptions import PermissionDenied
 
 from .forms import CreatePostForm, CreateCommentForm
 from .models import Post, Comment, Category
-from .utils import PostsQuerySetMixin, PostsEditMixin
+from .utils import PostsQuerySetMixin, PostsEditMixin, CommentEditMixin
 
 User = get_user_model()
 
@@ -19,15 +23,20 @@ class PostDeleteView(PostsEditMixin, LoginRequiredMixin, DeleteView):
 
     success_url = reverse_lazy('blog:index')
 
-    def get_object(self):
-        obj = super().get_object()
-        if obj.author != self.request.user:
-            raise PermissionDenied()
-        return obj
+    def delete(self, request, *args, **kwargs):
+        if self.request.user != Post.objects.get(pk=self.kwargs['pk']).author:
+            return redirect('blog:index')
+
+        return super().delete(request, *args, **kwargs)
 
 
 class PostUpdateView(PostsEditMixin, LoginRequiredMixin, UpdateView):
     form_class = CreatePostForm
+
+    def dispatch(self, request, *args, **kwargs):
+        if self.request.user != Post.objects.get(pk=self.kwargs['pk']).author:
+            return redirect('blog:post_detail', pk=self.kwargs['pk'])
+        return super().dispatch(request, *args, **kwargs)
 
     def get_object(self):
         obj = super().get_object()
@@ -55,6 +64,11 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
     model = Comment
     form_class = CreateCommentForm
 
+    def dispatch(self, request, *args, **kwargs) -> HttpResponse:
+        if not self.request.user.is_authenticated:
+            return redirect('blog:post_detail', pk=self.kwargs['pk'])
+        return super().dispatch(request, *args, **kwargs)
+
     def form_valid(self, form):
         if not self.request.user.is_authenticated:
             raise PermissionDenied()
@@ -67,37 +81,35 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
         return reverse('blog:post_detail', kwargs={'pk': self.kwargs['pk']})
 
 
-class CommentDeleteView(LoginRequiredMixin, DeleteView):
-    model = Comment
-    pk_url_kwarg = 'comment_pk'
-    template_name = 'blog/comment.html'
+class CommentDeleteView(CommentEditMixin, LoginRequiredMixin, DeleteView):
 
     def get_success_url(self):
         return reverse('blog:post_detail', kwargs={'pk': self.kwargs['pk']})
 
     def dispatch(self, request, *args, **kwargs):
-        if self.request.user != Comment.objects.get(
-                pk=self.kwargs['comment_pk']).author:
-
-            raise PermissionDenied()
+        if not self.request.user.is_authenticated:
+            return redirect('blog:post_detail', pk=self.kwargs['pk'])
         return super().dispatch(request, *args, **kwargs)
 
+    def delete(self, request, *args, **kwargs):
+        if self.request.user != Comment.objects.get(
+                pk=self.kwargs['comment_pk']).author:
+            return redirect('blog:post_detail', pk=self.kwargs['pk'])
+        return super().delete(request, *args, **kwargs)
 
-class CommentUpdateView(LoginRequiredMixin, UpdateView):
-    model = Comment
+
+class CommentUpdateView(CommentEditMixin, LoginRequiredMixin, UpdateView):
     form_class = CreateCommentForm
-    pk_url_kwarg = 'comment_pk'
-    template_name = 'blog/comment.html'
 
     def dispatch(self, request, *args, **kwargs):
         if self.request.user != Comment.objects.get(
                 pk=self.kwargs['comment_pk']).author:
+            return redirect('blog:post_detail', pk=self.kwargs['pk'])
 
-            raise PermissionDenied()
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
-        if not self.request.user != form.instance.author:
+        if self.request.user != form.instance.author:
             raise PermissionDenied()
         return super().form_valid(form)
 
@@ -148,7 +160,6 @@ class BlogCategoryListView(PostsQuerySetMixin, ListView):
     model = Post
     template_name = 'blog/category.html'
     context_object_name = 'post_list'
-    allow_empty = True
     paginate_by = PAGINATED_BY
 
     def get_context_data(self, **kwargs):
