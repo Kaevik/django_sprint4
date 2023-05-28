@@ -1,5 +1,4 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.db.models import Count
@@ -108,11 +107,17 @@ class AuthorProfileListView(PostsQuerySetMixin, ListView):
                 "location",
             ).all()
 
-        return super().get_queryset().filter(author__username=self.kwargs["username"])
+        return (
+            super()
+            .get_queryset()
+            .filter(author__username=self.kwargs["username"])
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["profile"] = get_object_or_404(User, username=self.kwargs["username"])
+        context["profile"] = get_object_or_404(
+            User, username=self.kwargs["username"]
+        )
         return context
 
 
@@ -160,7 +165,9 @@ class PostDetailView(PostsQuerySetMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["form"] = CreateCommentForm()
-        context["comments"] = Comment.objects.filter(post__pk=self.kwargs["pk"])
+        context["comments"] = Comment.objects.filter(
+            post__pk=self.kwargs["pk"]
+        )
         return context
 
     def get_queryset(self):

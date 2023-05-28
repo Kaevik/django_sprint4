@@ -11,7 +11,10 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterModelOptions(
             name="category",
-            options={"verbose_name": "категория", "verbose_name_plural": "Категории"},
+            options={
+                "verbose_name": "категория",
+                "verbose_name_plural": "Категории",
+            },
         ),
         migrations.AlterModelOptions(
             name="location",
@@ -63,7 +66,9 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="location",
             name="name",
-            field=models.CharField(max_length=256, verbose_name="Название места"),
+            field=models.CharField(
+                max_length=256, verbose_name="Название места"
+            ),
         ),
         migrations.AlterField(
             model_name="post",
