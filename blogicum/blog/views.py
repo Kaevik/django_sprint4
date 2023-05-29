@@ -109,7 +109,7 @@ class AuthorProfileListView(PostsQuerySetMixin, ListView):
                 )
                 .all()
                 .annotate(comment_count=Count("comments"))
-                .order_by('-pub-date')
+                .order_by('-pub_date')
             )
 
         return (
@@ -117,7 +117,7 @@ class AuthorProfileListView(PostsQuerySetMixin, ListView):
             .get_queryset()
             .filter(author__username=self.kwargs["username"])
             .annotate(comment_count=Count("comments"))
-            .order_by('-pub-date')
+            .order_by('-pub_date')
         )
 
     def get_context_data(self, **kwargs):
