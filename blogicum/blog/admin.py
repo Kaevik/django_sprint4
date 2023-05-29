@@ -31,12 +31,17 @@ class PostAdmin(admin.ModelAdmin):
         "location",
         "is_published",
         "pub_date",
+        "comment_count",
     )
     list_editable = ("is_published",)
     list_filter = (
         "category",
         "location",
     )
+
+    @admin.display(description="Комментариев")
+    def comment_count(self, post):
+        return post.comments.count()
 
 
 admin.site.register(Post, PostAdmin)

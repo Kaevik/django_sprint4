@@ -101,16 +101,21 @@ class AuthorProfileListView(PostsQuerySetMixin, ListView):
 
     def get_queryset(self):
         if self.request.user.username == self.kwargs["username"]:
-            return self.request.user.posts.select_related(
-                "category",
-                "author",
-                "location",
-            ).all()
+            return (
+                self.request.user.posts.select_related(
+                    "category",
+                    "author",
+                    "location",
+                )
+                .all()
+                .annotate(comment_count=Count("comments"))
+            )
 
         return (
             super()
             .get_queryset()
             .filter(author__username=self.kwargs["username"])
+            .annotate(comment_count=Count("comments"))
         )
 
     def get_context_data(self, **kwargs):
@@ -127,13 +132,8 @@ class BlogIndexListView(PostsQuerySetMixin, ListView):
     context_object_name = "post_list"
     paginate_by = PAGINATED_BY
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["title"] = "Лента записей"
-        return context
-
     def get_queryset(self):
-        return super().get_queryset().annotate(Count("comments"))
+        return super().get_queryset().annotate(comment_count=Count("comments"))
 
 
 class BlogCategoryListView(PostsQuerySetMixin, ListView):
@@ -154,7 +154,7 @@ class BlogCategoryListView(PostsQuerySetMixin, ListView):
             super()
             .get_queryset()
             .filter(category__slug=self.kwargs["category_slug"])
-            .annotate(Count("comments"))
+            .annotate(comment_count=Count("comments"))
         )
 
 
@@ -165,8 +165,8 @@ class PostDetailView(PostsQuerySetMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["form"] = CreateCommentForm()
-        context["comments"] = Comment.objects.filter(
-            post__pk=self.kwargs["pk"]
+        context["comments"] = (
+            self.get_object().comments.prefetch_related("author").all()
         )
         return context
 
@@ -176,6 +176,5 @@ class PostDetailView(PostsQuerySetMixin, DetailView):
             .get_queryset()
             .prefetch_related(
                 "comments",
-                "comments__author",
             )
         )
