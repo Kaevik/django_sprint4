@@ -181,6 +181,18 @@ class PostDetailView(PostsQuerySetMixin, DetailView):
                                .comments.prefetch_related("author").all())
         return context
 
+    def get_queryset(self):
+        # Берём базовый queryset из миксина
+        queryset = super().get_queryset().prefetch_related("comments")
+        if self.request.user.is_authenticated:
+            # Автор видит свои неопубликованные посты
+            queryset = queryset.filter(Q(is_published=True)
+                                       | Q(author=self.request.user))
+        else:
+            # Анонимные видят только опубликованные
+            queryset = queryset.filter(is_published=True)
+        return queryset
+
     # ИСПРАВЛЕНИЕ: разрешаем автору видеть свой неопубликованный пост
     def get_queryset(self):
         queryset = super().get_queryset().prefetch_related("comments")
