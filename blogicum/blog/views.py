@@ -2,17 +2,13 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.db.models import Count, Q
-from django.views.generic import (
-    CreateView,
-    DeleteView,
-    DetailView,
-    ListView,
-    UpdateView,
-)
+from django.views.generic import (CreateView, DeleteView,
+                                  DetailView, ListView, UpdateView)
 
 from .forms import CreateCommentForm, CreatePostForm
 from .models import Category, Comment, Post, User
-from .mixins import CommentEditMixin, PostsEditMixin, PostsQuerySetMixin
+from .mixins import (CommentEditMixin,
+                     PostsEditMixin, PostsQuerySetMixin)
 
 PAGINATED_BY = 10
 
@@ -45,10 +41,8 @@ class PostCreateView(PostsEditMixin, LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
     def get_success_url(self) -> str:
-        return reverse(
-            "blog:profile",
-            kwargs={"username": self.request.user.username},
-        )
+        return reverse("blog:profile",
+                       kwargs={"username": self.request.user.username})
 
 
 class CommentCreateView(LoginRequiredMixin, CreateView):
@@ -56,17 +50,20 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
     form_class = CreateCommentForm
 
     def form_valid(self, form):
-        form.instance.post = get_object_or_404(Post, pk=self.kwargs["pk"])
+        form.instance.post = get_object_or_404(Post,
+                                               pk=self.kwargs["pk"])
         form.instance.author = self.request.user
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse("blog:post_detail", kwargs={"pk": self.kwargs["pk"]})
+        return reverse("blog:post_detail",
+                       kwargs={"pk": self.kwargs["pk"]})
 
 
 class CommentDeleteView(CommentEditMixin, LoginRequiredMixin, DeleteView):
     def get_success_url(self):
-        return reverse("blog:post_detail", kwargs={"pk": self.kwargs["pk"]})
+        return reverse("blog:post_detail",
+                       kwargs={"pk": self.kwargs["pk"]})
 
     def delete(self, request, *args, **kwargs):
         comment = get_object_or_404(Comment, pk=self.kwargs["comment_pk"])
@@ -75,10 +72,10 @@ class CommentDeleteView(CommentEditMixin, LoginRequiredMixin, DeleteView):
         return super().delete(request, *args, **kwargs)
 
 
-class CommentUpdateView(CommentEditMixin, LoginRequiredMixin, UpdateView):
+class CommentUpdateView(CommentEditMixin,
+                        LoginRequiredMixin, UpdateView):
     form_class = CreateCommentForm
 
-    # ИСПРАВЛЕНИЕ: используем get_object_or_404 вместо Comment.objects.get
     def dispatch(self, request, *args, **kwargs):
         comment = get_object_or_404(Comment, pk=self.kwargs["comment_pk"])
         if self.request.user != comment.author:
@@ -86,7 +83,8 @@ class CommentUpdateView(CommentEditMixin, LoginRequiredMixin, UpdateView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_success_url(self):
-        return reverse("blog:post_detail", kwargs={"pk": self.kwargs["pk"]})
+        return reverse("blog:post_detail",
+                       kwargs={"pk": self.kwargs["pk"]})
 
 
 class AuthorProfileListView(PostsQuerySetMixin, ListView):
@@ -97,16 +95,11 @@ class AuthorProfileListView(PostsQuerySetMixin, ListView):
     def get_queryset(self):
         if self.request.user.username == self.kwargs["username"]:
             return (
-                self.request.user.posts.select_related(
-                    "category",
-                    "author",
-                    "location",
-                )
+                self.request.user.posts.select_related("category", "author", "location")
                 .all()
                 .annotate(comment_count=Count("comments"))
                 .order_by("-pub_date")
             )
-
         return (
             super()
             .get_queryset()
@@ -117,9 +110,8 @@ class AuthorProfileListView(PostsQuerySetMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["profile"] = get_object_or_404(
-            User, username=self.kwargs["username"]
-        )
+        context["profile"] = get_object_or_404(User,
+                                               username=self.kwargs["username"])
         return context
 
 
@@ -129,11 +121,9 @@ class BlogIndexListView(PostsQuerySetMixin, ListView):
     context_object_name = "post_list"
     paginate_by = PAGINATED_BY
 
-    # ИСПРАВЛЕНИЕ: разрешаем автору видеть свои неопубликованные посты
     def get_queryset(self):
         queryset = (super().get_queryset()
                     .annotate(comment_count=Count("comments")))
-
         if self.request.user.is_authenticated:
             queryset = queryset.filter(Q(is_published=True)
                                        | Q(author=self.request.user))
@@ -151,17 +141,14 @@ class BlogCategoryListView(PostsQuerySetMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["category"] = get_object_or_404(
-            Category, slug=self.kwargs["category_slug"], is_published=True
+            Category, slug=self.kwargs["category_slug"],
+            is_published=True
         )
         return context
 
     def get_queryset(self):
-        queryset = (
-            super()
-            .get_queryset()
-            .filter(category__slug=self.kwargs["category_slug"])
-            .annotate(comment_count=Count("comments"))
-        )
+        queryset = (super().get_queryset().filter(category__slug=self.kwargs["category_slug"])
+                    .annotate(comment_count=Count("comments")))
         if self.request.user.is_authenticated:
             queryset = queryset.filter(Q(is_published=True)
                                        | Q(author=self.request.user))
@@ -183,12 +170,9 @@ class PostDetailView(DetailView):
             queryset = queryset.filter(is_published=True)
         return queryset
 
-    # ИСПРАВЛЕНИЕ: разрешаем автору видеть свой неопубликованный пост
-    def get_queryset(self):
-        queryset = super().get_queryset().prefetch_related("comments")
-        if self.request.user.is_authenticated:
-            queryset = queryset.filter(Q(is_published=True)
-                                       | Q(author=self.request.user))
-        else:
-            queryset = queryset.filter(is_published=True)
-        return queryset
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["form"] = CreateCommentForm()  # передаем экземпляр формы
+        context["comments"] = (self.get_object()
+                               .comments.prefetch_related("author").all())
+        return context

@@ -1,6 +1,5 @@
 from django import forms
 from django.utils import timezone
-
 from .models import Comment, Post
 
 
@@ -9,9 +8,7 @@ class CreatePostForm(forms.ModelForm):
         initial=timezone.now,
         required=True,
         widget=forms.DateTimeInput(
-            attrs={
-                "type": "datetime-local",
-            },
+            attrs={"type": "datetime-local"},
             format="%Y-%m-%dT%H:%M",
         ),
     )
