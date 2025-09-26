@@ -170,26 +170,15 @@ class BlogCategoryListView(PostsQuerySetMixin, ListView):
         return queryset
 
 
-class PostDetailView(PostsQuerySetMixin, DetailView):
+class PostDetailView(DetailView):
     model = Post
     template_name = "blog/detail.html"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["form"] = CreateCommentForm()
-        context["comments"] = (self.get_object()
-                               .comments.prefetch_related("author").all())
-        return context
-
     def get_queryset(self):
-        # Берём базовый queryset из миксина
         queryset = super().get_queryset().prefetch_related("comments")
         if self.request.user.is_authenticated:
-            # Автор видит свои неопубликованные посты
-            queryset = queryset.filter(Q(is_published=True)
-                                       | Q(author=self.request.user))
+            queryset = queryset.filter(Q(is_published=True) | Q(author=self.request.user))
         else:
-            # Анонимные видят только опубликованные
             queryset = queryset.filter(is_published=True)
         return queryset
 
