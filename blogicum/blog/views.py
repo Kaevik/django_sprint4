@@ -95,7 +95,8 @@ class AuthorProfileListView(PostsQuerySetMixin, ListView):
     def get_queryset(self):
         if self.request.user.username == self.kwargs["username"]:
             return (
-                self.request.user.posts.select_related("category", "author", "location")
+                self.request.user.posts
+                .select_related("category", "author", "location")
                 .all()
                 .annotate(comment_count=Count("comments"))
                 .order_by("-pub_date")
@@ -110,8 +111,8 @@ class AuthorProfileListView(PostsQuerySetMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["profile"] = get_object_or_404(User,
-                                               username=self.kwargs["username"])
+        context["profile"] = (
+            get_object_or_404(User,username=self.kwargs["username"]))
         return context
 
 
@@ -147,7 +148,8 @@ class BlogCategoryListView(PostsQuerySetMixin, ListView):
         return context
 
     def get_queryset(self):
-        queryset = (super().get_queryset().filter(category__slug=self.kwargs["category_slug"])
+        queryset = (super().get_queryset()
+                    .filter(category__slug=self.kwargs["category_slug"])
                     .annotate(comment_count=Count("comments")))
         if self.request.user.is_authenticated:
             queryset = queryset.filter(Q(is_published=True)
