@@ -163,7 +163,8 @@ class BlogCategoryListView(PostsQuerySetMixin, ListView):
             .annotate(comment_count=Count("comments"))
         )
         if self.request.user.is_authenticated:
-            queryset = queryset.filter(Q(is_published=True) | Q(author=self.request.user))
+            queryset = queryset.filter(Q(is_published=True)
+                                       | Q(author=self.request.user))
         else:
             queryset = queryset.filter(is_published=True)
         return queryset
