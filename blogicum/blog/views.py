@@ -131,9 +131,12 @@ class BlogIndexListView(PostsQuerySetMixin, ListView):
 
     # ИСПРАВЛЕНИЕ: разрешаем автору видеть свои неопубликованные посты
     def get_queryset(self):
-        queryset = super().get_queryset().annotate(comment_count=Count("comments"))
+        queryset = (super().get_queryset()
+                    .annotate(comment_count=Count("comments")))
+
         if self.request.user.is_authenticated:
-            queryset = queryset.filter(Q(is_published=True) | Q(author=self.request.user))
+            queryset = queryset.filter(Q(is_published=True)
+                                       | Q(author=self.request.user))
         else:
             queryset = queryset.filter(is_published=True)
         return queryset
@@ -173,14 +176,16 @@ class PostDetailView(PostsQuerySetMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["form"] = CreateCommentForm()
-        context["comments"] = self.get_object().comments.prefetch_related("author").all()
+        context["comments"] = (self.get_object()
+                               .comments.prefetch_related("author").all())
         return context
 
     # ИСПРАВЛЕНИЕ: разрешаем автору видеть свой неопубликованный пост
     def get_queryset(self):
         queryset = super().get_queryset().prefetch_related("comments")
         if self.request.user.is_authenticated:
-            queryset = queryset.filter(Q(is_published=True) | Q(author=self.request.user))
+            queryset = queryset.filter(Q(is_published=True)
+                                       | Q(author=self.request.user))
         else:
             queryset = queryset.filter(is_published=True)
         return queryset
